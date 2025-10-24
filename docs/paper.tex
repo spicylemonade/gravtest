@@ -1,0 +1,43 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{hyperref}
+\title{GravTest: A Minimal 2D N-Body Gravity Simulator}
+\author{GravTest Project}
+\date{\today}
+\begin{document}
+\maketitle
+\begin{abstract}
+We present GravTest, a minimal two-dimensional N-body gravity simulator with clear separation of concerns, designed for headless operation and automated testing. The simulator implements Newtonian gravity with softening and supports symplectic Euler--Cromer, symplectic Leapfrog (Velocity--Verlet), and classical Runge--Kutta 4 integrators. A Barnes--Hut quadtree provides $\mathcal{O}(N\log N)$ force evaluation for larger-N problems. Collisions can be handled via inelastic merging or an impulse-based bounce model with configurable restitution. An optional \texttt{pygame} renderer offers interactive visualization. We outline the model, algorithms, and validation via unit tests.
+\end{abstract}
+
+\section{Physical Model}
+Bodies with masses $m_i$, positions $\mathbf{x}_i\in\mathbb{R}^2$, and velocities $\mathbf{v}_i$ obey
+\begin{equation}
+  \mathbf{a}_i = \sum_{j\ne i} G m_j\, \frac{\mathbf{r}_{ij}}{\left(\lVert\mathbf{r}_{ij}\rVert^2 + \epsilon^2\right)^{3/2}},\quad \mathbf{r}_{ij} = \mathbf{x}_j - \mathbf{x}_i.
+\end{equation}
+The potential energy is $U = -\sum_{i<j} G m_i m_j / \sqrt{\lVert\mathbf{r}_{ij}\rVert^2 + \epsilon^2}$.
+
+\section{Time Integration}
+We provide Euler--Cromer, Leapfrog/Velocity--Verlet, and RK4 integrators. Symplectic methods exhibit superior long-term energy behavior for Hamiltonian systems.
+
+\section{Barnes--Hut Approximation}
+A quadtree stores the total mass and center of mass of bodies per node. For a target body, a node of size $s$ at distance $d$ is approximated by a single pseudo-body when $s/d < \theta$. This reduces cost from $\mathcal{O}(N^2)$ to approximately $\mathcal{O}(N\log N)$ per step while preserving acceptable accuracy.
+
+\section{Collisions}
+We support two collision models:
+\begin{itemize}
+  \item \textbf{Merge} (inelastic coalescence): overlapping bodies are replaced by a single body conserving mass and momentum, with radius computed via quadratic area sum.
+  \item \textbf{Bounce} (impulse-based): for overlapping discs, we compute the collision normal $\mathbf{n}$ and relative normal velocity $v_n$. The impulse magnitude is $j = -\frac{(1+e) v_n}{1/m_1 + 1/m_2}$ with restitution $e\in[0,1]$. Velocities are updated as $\mathbf{v}_1' = \mathbf{v}_1 - j\,\mathbf{n}/m_1$ and $\mathbf{v}_2' = \mathbf{v}_2 + j\,\mathbf{n}/m_2$. Positional correction separates bodies proportionally to inverse masses.
+\end{itemize}
+
+\section{Validation}
+Unit tests verify: inverse-square accelerations, momentum conservation, energy stability for circular orbit, reduced energy drift for Leapfrog/RK4 vs Euler--Cromer, collision merging invariants, bounce restitution behavior (including elastic conservation and inelastic scaling), JSON I/O roundtrip, and Barnes--Hut accuracy (exact for two bodies; low RMS error for clustered sets).
+
+\section{Usage}
+Headless examples: \texttt{gravtest --headless --scenario random --n 200 --dt 0.005 --integrator leapfrog --force-model bh --theta 0.5} and \texttt{gravtest --headless --scenario random --n 20 --dt 0.01 --collisions --collision-model bounce --restitution 0.8}. Build the paper with \texttt{make paper}.
+
+\section{Conclusion}
+GravTest provides a compact, approachable reference for 2D gravitational N-body simulation with scalable force evaluation and configurable collision handling.
+
+\end{document}
