@@ -1,0 +1,9 @@
+{
+  "G": 1.0,
+  "softening": 0.001,
+  "collisions": false,
+  "bodies": [
+    {"name": "Star", "mass": 10.0, "pos": [0.0, 0.0], "vel": [0.0, 0.0], "radius": 0.2, "fixed": true, "color": [255, 220, 120]},
+    {"name": "Satellite", "mass": 0.1, "pos": [1.0, 0.0], "vel": [0.0, 3.1622776601683795], "radius": 0.07, "fixed": false, "color": [120, 180, 255]}
+  ]
+}
